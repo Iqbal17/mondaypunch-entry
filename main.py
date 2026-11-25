@@ -52,6 +52,16 @@ ENTRY = "My alarm clock quit this morning. Said Mondays were a hostile work envi
 MAX_CHARS = 200
 
 
+def validate_line(line):
+    """Gate guard: the line must be 1-200 characters, not only whitespace."""
+    if not isinstance(line, str):
+        raise ValueError("line must be a string")
+    if not 1 <= len(line) <= MAX_CHARS:
+        raise ValueError("line must be 1-200 characters")
+    if not line.strip():
+        raise ValueError("line must not be only whitespace")
+
+
 def check_gate(text):
     """Mirror the sealed gate: 1-200 UTF-8 chars, not only whitespace."""
     if not isinstance(text, str):
@@ -69,11 +79,22 @@ def entry_path():
     return os.path.join(out_dir, "entry.txt")
 
 
+def verify_written(path):
+    """Write-back self-check: entry.txt must contain the line plus newline."""
+    with open(path, "r", encoding="utf-8") as f:
+        written = f.read()
+    if written != ENTRY + "\n":
+        raise ValueError("written entry.txt does not match the line")
+
+
 def main():
+    validate_line(ENTRY)
     if not check_gate(ENTRY):
         raise ValueError("entry fails the 1-200 character gate")
-    with open(entry_path(), "w", encoding="utf-8") as f:
+    path = entry_path()
+    with open(path, "w", encoding="utf-8") as f:
         f.write(ENTRY + "\n")
+    verify_written(path)
 
 
 if __name__ == "__main__":
